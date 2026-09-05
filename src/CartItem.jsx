@@ -1,68 +1,192 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { removeItem, updateQuantity } from './CartSlice';
-import './CartItem.css';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    updateQuantity,
+    addItem,
+    removeItem
+} from './CartSlice';
 
-const CartItem = ({ onContinueShopping }) => {
-  const cart = useSelector(state => state.cart.items);
-  const dispatch = useDispatch();
+function CartItem({ onContinueShopping }) {
+    const dispatch = useDispatch();
 
-  // Calculate total amount for all products in the cart
-  const calculateTotalAmount = () => {
- 
-  };
+    // Get cart items from Redux
+    const CartItems = useSelector((state) => state.cart.items);
 
-  const handleContinueShopping = (e) => {
-   
-  };
+    // Calculate total cart amount
+    const calculateTotalAmount = () => {
+        let total = 0;
 
+        CartItems.forEach((item) => {
+            const cost = parseFloat(item.cost.substring(1));
+            total += cost * item.quantity;
+        });
 
+        return total;
+    };
 
-  const handleIncrement = (item) => {
-  };
+    // Calculate subtotal of one item
+    const calculateTotalCost = (item) => {
+        const cost = parseFloat(item.cost.substring(1));
+        return cost * item.quantity;
+    };
 
-  const handleDecrement = (item) => {
-   
-  };
+    // Increase quantity
+    const handleIncrement = (item) => {
+        dispatch(
+            updateQuantity({
+                name: item.name,
+                quantity: item.quantity + 1
+            })
+        );
+    };
 
-  const handleRemove = (item) => {
-  };
+    // Decrease quantity
+    const handleDecrement = (item) => {
+        if (item.quantity > 1) {
+            dispatch(
+                updateQuantity({
+                    name: item.name,
+                    quantity: item.quantity - 1
+                })
+            );
+        } else {
+            dispatch(removeItem(item.name));
+        }
+    };
 
-  // Calculate total cost based on quantity for an item
-  const calculateTotalCost = (item) => {
-  };
+    // Remove item completely
+    const handleRemove = (item) => {
+        dispatch(removeItem(item.name));
+    };
 
-  return (
-    <div className="cart-container">
-      <h2 style={{ color: 'black' }}>Total Cart Amount: ${calculateTotalAmount()}</h2>
-      <div>
-        {cart.map(item => (
-          <div className="cart-item" key={item.name}>
-            <img className="cart-item-image" src={item.image} alt={item.name} />
-            <div className="cart-item-details">
-              <div className="cart-item-name">{item.name}</div>
-              <div className="cart-item-cost">{item.cost}</div>
-              <div className="cart-item-quantity">
-                <button className="cart-item-button cart-item-button-dec" onClick={() => handleDecrement(item)}>-</button>
-                <span className="cart-item-quantity-value">{item.quantity}</span>
-                <button className="cart-item-button cart-item-button-inc" onClick={() => handleIncrement(item)}>+</button>
-              </div>
-              <div className="cart-item-total">Total: ${calculateTotalCost(item)}</div>
-              <button className="cart-item-delete" onClick={() => handleRemove(item)}>Delete</button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div style={{ marginTop: '20px', color: 'black' }} className='total_cart_amount'></div>
-      <div className="continue_shopping_btn">
-        <button className="get-started-button" onClick={(e) => handleContinueShopping(e)}>Continue Shopping</button>
-        <br />
-        <button className="get-started-button1">Checkout</button>
-      </div>
-    </div>
-  );
-};
+    // Add an item again using addItem
+    const handleAddAgain = (item) => {
+        dispatch(
+            addItem({
+                name: item.name,
+                image: item.image,
+                cost: item.cost
+            })
+        );
+    };
+
+    const handleContinueShopping = (e) => {
+        e.preventDefault();
+        onContinueShopping(e);
+    };
+
+    const handleCheckoutShopping = (e) => {
+        e.preventDefault();
+        alert("Functionality to be added for future reference");
+    };
+
+    return (
+        <div className="cart-container">
+            <h2>Shopping Cart</h2>
+
+            {CartItems.length === 0 ? (
+                <div className="empty-cart">
+                    <h3>Your cart is empty</h3>
+
+                    <button
+                        className="continue-shopping"
+                        onClick={handleContinueShopping}
+                    >
+                        Continue Shopping
+                    </button>
+                </div>
+            ) : (
+                <>
+                    {CartItems.map((item) => (
+                        <div
+                            className="cart-item"
+                            key={item.name}
+                        >
+                            <img
+                                src={item.image}
+                                alt={item.name}
+                                className="cart-item-image"
+                            />
+
+                            <div className="cart-item-details">
+                                <h3>{item.name}</h3>
+
+                                <p>
+                                    Unit Price: {item.cost}
+                                </p>
+
+                                <div className="quantity-controls">
+                                    <button
+                                        onClick={() =>
+                                            handleDecrement(item)
+                                        }
+                                    >
+                                        -
+                                    </button>
+
+                                    <span>{item.quantity}</span>
+
+                                    <button
+                                        onClick={() =>
+                                            handleIncrement(item)
+                                        }
+                                    >
+                                        +
+                                    </button>
+                                </div>
+
+                                <p>
+                                    Subtotal: $
+                                    {calculateTotalCost(item).toFixed(2)}
+                                </p>
+
+                                <button
+                                    className="remove-button"
+                                    onClick={() =>
+                                        handleRemove(item)
+                                    }
+                                >
+                                    Remove
+                                </button>
+
+                                <button
+                                    className="add-again-button"
+                                    onClick={() =>
+                                        handleAddAgain(item)
+                                    }
+                                >
+                                    Add Again
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+
+                    <div className="cart-total">
+                        <h2>
+                            Total: $
+                            {calculateTotalAmount().toFixed(2)}
+                        </h2>
+                    </div>
+
+                    <div className="cart-buttons">
+                        <button
+                            className="continue-shopping"
+                            onClick={handleContinueShopping}
+                        >
+                            Continue Shopping
+                        </button>
+
+                        <button
+                            className="checkout-button"
+                            onClick={handleCheckoutShopping}
+                        >
+                            Checkout
+                        </button>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
 
 export default CartItem;
-
-
